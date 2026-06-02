@@ -4,8 +4,10 @@ const { spawn, fork } = require('child_process');
 const net = require('net');
 const fs = require('fs');
 
-// Disable hardware acceleration to permanently prevent Windows GPU rendering black screen bugs
-app.disableHardwareAcceleration();
+// Disable hardware acceleration on Windows only to prevent GPU rendering black screen bugs
+if (process.platform === 'win32') {
+  app.disableHardwareAcceleration();
+}
 
 // Enforce single instance lock to prevent duplicate database and port collisions
 const gotTheLock = app.requestSingleInstanceLock();
