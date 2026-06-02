@@ -1,0 +1,89 @@
+{
+  "name": "vuducom-dm-software",
+  "version": "1.0.0",
+  "description": "Vuducom Instagram DM & Comment Automation Software",
+  "main": "main.js",
+  "scripts": {
+    "dev": "npx --yes kill-port 3010 5000 && concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"wait-on http://localhost:3010 && electron .\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev -- -p 3010",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "pack": "npx electron-builder --dir",
+    "dist:win": "npm run build:backend && npm run build:frontend && npx electron-builder --win",
+    "dist:mac": "npm run build:backend && npm run build:frontend && npx electron-builder --mac",
+    "dist:all": "npm run build:backend && npm run build:frontend && npx electron-builder --win --mac",
+    "dist": "npm run dist:win",
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "electron": "^29.0.0",
+    "electron-builder": "^24.13.3",
+    "electron-packager": "^17.1.2",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.vuducom.dm.automation",
+    "productName": "Vuducom DM Automation",
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.productivity"
+    },
+    "dmg": {
+      "background": null,
+      "iconSize": 100,
+      "contents": [
+        {
+          "x": 410,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        },
+        {
+          "x": 130,
+          "y": 150,
+          "type": "file"
+        }
+      ]
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "backend",
+        "to": "backend",
+        "filter": [
+          "dist/**/*",
+          "prisma/**/*",
+          "node_modules/**/*",
+          "package.json"
+        ]
+      },
+      {
+        "from": "frontend/out",
+        "to": "frontend/out"
+      }
+    ],
+    "directories": {
+      "output": "dist-packed"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}

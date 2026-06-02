@@ -1,0 +1,75 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "darwin", "darwin-arm64", "windows"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String             @id @default(cuid())
+  email     String             @unique
+  name      String
+  password  String
+  createdAt DateTime           @default(now())
+  sessions  InstagramSession[]
+  campaigns Campaign[]
+  settings  UserSettings?
+}
+
+model InstagramSession {
+  id                String   @id @default(cuid())
+  userId            String
+  instagramUsername String
+  isActive          Boolean  @default(false)
+  storageStatePath  String?
+  browserProfilePath String?
+  proxyUrl          String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaigns         Campaign[]
+}
+
+model Campaign {
+  id          String           @id @default(cuid())
+  userId      String
+  sessionId   String
+  name        String
+  type        String           // "DM" | "COMMENT"
+  status      String           @default("QUEUED")  // QUEUED | RUNNING | PAUSED | COMPLETED | CANCELLED | FAILED
+  links       String           // JSON stringified array of post URLs or usernames
+  messages    String           // JSON stringified array of messages/comments
+  delayMin    Int              @default(8)
+  delayMax    Int              @default(20)
+  hourlyLimit Int              @default(15)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session     InstagramSession @relation(fields: [sessionId], references: [id])
+  jobs        JobQueue[]
+}
+
+model JobQueue {
+  id            String   @id @default(cuid())
+  campaignId    String
+  interactionId String   // the post URL or username
+  message       String   // the comment or DM text
+  status        String   @default("QUEUED") // QUEUED | RUNNING | DONE | FAILED | SKIPPED
+  retries       Int      @default(0)
+  errorMsg      String?
+  executedAt    DateTime?
+  createdAt     DateTime @default(now())
+  campaign      Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+}
+
+model UserSettings {
+  id          String @id @default(cuid())
+  userId      String @unique
+  delayMin    Int    @default(8)
+  delayMax    Int    @default(20)
+  hourlyLimit Int    @default(15)
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

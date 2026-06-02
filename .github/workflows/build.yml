@@ -1,0 +1,114 @@
+name: Build and Release Installers
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    name: Build macOS Installer
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies (Root)
+        run: npm ci
+
+      - name: Install dependencies (Backend)
+        run: |
+          cd backend
+          npm ci
+
+      - name: Install dependencies (Frontend)
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Generate Prisma Client
+        run: |
+          cd backend
+          npx prisma generate
+
+      - name: Build application code
+        run: |
+          npm run build:backend
+          npm run build:frontend
+
+      - name: Package macOS App
+        run: |
+          npx electron-builder --mac
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload macOS DMG Installer Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vuducom-DM-Automation-macOS
+          path: dist-packed/*.dmg
+
+  build-windows:
+    name: Build Windows Installer
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies (Root)
+        run: npm ci
+
+      - name: Install dependencies (Backend)
+        shell: bash
+        run: |
+          cd backend
+          npm ci
+
+      - name: Install dependencies (Frontend)
+        shell: bash
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Generate Prisma Client
+        shell: bash
+        run: |
+          cd backend
+          npx prisma generate
+
+      - name: Build application code
+        shell: bash
+        run: |
+          npm run build:backend
+          npm run build:frontend
+
+      - name: Package Windows App
+        shell: bash
+        run: |
+          npx electron-builder --win
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Windows EXE Installer Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vuducom-DM-Automation-Windows
+          path: dist-packed/*.exe
