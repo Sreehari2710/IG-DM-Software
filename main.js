@@ -37,6 +37,38 @@ function findFreePort(startPort) {
   });
 }
 
+// On macOS, packaged extraResources files may lose their executable permissions.
+// This function recursively finds any query-engine binaries and ensures they are executable (755).
+function ensurePrismaBinariesExecutable(dir) {
+  if (process.platform !== 'darwin') return;
+  if (!fs.existsSync(dir)) return;
+
+  const files = fs.readdirSync(dir);
+  for (const file of files) {
+    const filePath = path.join(dir, file);
+    let stat;
+    try {
+      stat = fs.statSync(filePath);
+    } catch {
+      continue;
+    }
+
+    if (stat.isDirectory()) {
+      ensurePrismaBinariesExecutable(filePath);
+    } else if (file.includes('query-engine') || file.includes('schema-engine') || file.includes('migration-engine')) {
+      try {
+        const mode = stat.mode & 0o777;
+        if ((mode & 0o111) !== 0o111) { // if not executable
+          fs.chmodSync(filePath, 0o755);
+          console.log(`[Electron] Set executable permission (755) for Prisma engine: ${filePath}`);
+        }
+      } catch (err) {
+        console.error(`[Electron] Failed to set permissions for ${filePath}:`, err);
+      }
+    }
+  }
+}
+
 // ─── Start the Express backend ───────────────────────────────────────────────
 async function startBackend() {
   const isDev = !app.isPackaged;
@@ -55,6 +87,10 @@ async function startBackend() {
     ? path.join(__dirname, 'backend')
     : path.join(process.resourcesPath, 'backend');
   const envPath = path.join(backendDir, '.env');
+
+  if (!isDev) {
+    ensurePrismaBinariesExecutable(backendDir);
+  }
 
   // Auto-detect if a cloud PostgreSQL database (Neon) is configured
   let dbUrl = process.env.DATABASE_URL || '';
