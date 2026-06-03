@@ -118,8 +118,8 @@ async function startBackend() {
     const userDataPath = app.getPath('userData');
     const prodDbPath = path.join(userDataPath, 'vudu_prod.db');
 
-    // Copy template dev.db from read-only package directory to userData directory if not exists
-    const templateDbPath = path.join(backendDir, 'prisma', 'dev.db');
+    // Copy template vudu_template.db from read-only package directory to userData directory if not exists
+    const templateDbPath = path.join(backendDir, 'prisma', 'vudu_template.db');
     if (!fs.existsSync(prodDbPath)) {
       try {
         if (!fs.existsSync(userDataPath)) {

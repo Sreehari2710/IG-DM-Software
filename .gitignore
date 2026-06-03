@@ -20,6 +20,7 @@ backend/prisma/dev.db-shm
 backend/prisma/dev.db-wal
 vudu_prod.db
 *.db
+!backend/prisma/vudu_template.db
 *.db-journal
 *.db-shm
 *.db-wal
