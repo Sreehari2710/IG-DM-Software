@@ -38,6 +38,10 @@ jobs:
           cd frontend
           npm ci
 
+      - name: Create Backend Environment Configuration (.env)
+        run: |
+          echo "DATABASE_URL=\"${{ secrets.DATABASE_URL }}\"" > backend/.env
+
       - name: Generate Prisma Client
         run: |
           cd backend
@@ -87,6 +91,11 @@ jobs:
         run: |
           cd frontend
           npm ci
+
+      - name: Create Backend Environment Configuration (.env)
+        shell: bash
+        run: |
+          echo "DATABASE_URL=\"${{ secrets.DATABASE_URL }}\"" > backend/.env
 
       - name: Generate Prisma Client
         shell: bash

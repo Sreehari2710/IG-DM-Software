@@ -68,7 +68,8 @@
           "dist/**/*",
           "prisma/**/*",
           "node_modules/**/*",
-          "package.json"
+          "package.json",
+          ".env"
         ]
       },
       {
