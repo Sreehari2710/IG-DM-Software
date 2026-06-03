@@ -114,13 +114,9 @@ async function startBackend() {
   const isCloudDb = dbUrl.startsWith('postgres://') || dbUrl.startsWith('postgresql://');
 
   if (!isCloudDb) {
-    // Fall back to SQLite database routing
-    dbUrl = 'file:' + path.join(backendDir, 'prisma', 'dev.db');
-
     // In production, locate the database in the app's persistent user-data folder
     const userDataPath = app.getPath('userData');
     const prodDbPath = path.join(userDataPath, 'vudu_prod.db');
-    dbUrl = 'file:' + prodDbPath;
 
     // Copy template dev.db from read-only package directory to userData directory if not exists
     const templateDbPath = path.join(backendDir, 'prisma', 'dev.db');
@@ -139,6 +135,10 @@ async function startBackend() {
         console.error('[Electron] Failed to copy database template:', err);
       }
     }
+
+    // Format the SQLite connection URL to be absolute and percent-encoded for paths containing spaces (e.g. macOS "Application Support")
+    const formattedDbPath = prodDbPath.replace(/\\/g, '/');
+    dbUrl = 'file:' + encodeURI(formattedDbPath);
   }
 
   // In production, run compiled JS files using Node fork which references Electron's helper processes
